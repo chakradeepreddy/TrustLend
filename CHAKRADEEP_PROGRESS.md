@@ -102,6 +102,7 @@ Completed tasks:
 - Implement Check 1 (uncertainty band)
 - Save the trained model artifact to artifacts/model.joblib
 - Implement risk(), plain_decision(), check1_unsure(), and CUTOFF
+- Train logistic regression baseline (Logistic AUC: 0.7096 on temporary train/validation split)
 - Produce the reliability diagram (Raw AUC: 0.8669, Calibrated AUC: 0.8677 on temporary split)
 - Draft the model card
 
