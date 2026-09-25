@@ -94,9 +94,19 @@ Status: COMPLETE
 - Antigravity should use the trustlend interpreter
 
 ### ML implementation
-Status: NOT STARTED YET
+Status: IN PROGRESS
 
-No model implementation has been written yet.
+Completed tasks:
+- Train the loan-risk model (HistGradientBoostingClassifier + CalibratedClassifierCV)
+- Calculate the 17% cost-based cutoff
+- Implement Check 1 (uncertainty band)
+- Save the trained model artifact to artifacts/model.joblib
+- Implement risk(), plain_decision(), check1_unsure(), and CUTOFF
+
+Pending tasks:
+- Produce the reliability diagram
+- Create the model card
+- Test everything
 
 ## My planned ML work
 1. Understand the training data contract
@@ -120,6 +130,5 @@ No model implementation has been written yet.
 - Keep this log updated after each meaningful milestone.
 
 ## Current status
-Current step: Environment and repository setup complete.
-Next step: Understand and prepare the training-data input for the loan model.
-Model code has NOT started.
+Current step: Baseline model implementation complete.
+Next step: Review and validate the model implementation, then produce the reliability diagram and model card.
