@@ -12,9 +12,11 @@ import src.decide
 importlib.reload(src.decide)
 from src.decide import decide
 from audit import log
+from sidebar import queue_badge
 
 st.set_page_config(page_title="TrustLend", layout="wide")
-#st.logo("app/logo.png")
+st.logo(str(ROOT / "app" / "logo.svg"))
+queue_badge()
 st.title("TrustLend: a loan AI that knows when to ask a human")
 
 FIELDS = {
@@ -76,10 +78,10 @@ if submitted:
 
     a, b, c = st.columns(3)
     a.metric("Risk", f"{r['p_default']:.1%}")
-    b.metric("Check 1: too close to the line?", "Yes" if r["unsure"] else "No")
+    b.metric("Check 1: too close to the line?", "🚫 Fired" if r["unsure"] else "✅ Pass")
     c.metric(
         "Check 2: unfamiliar?",
-        "Yes" if r["unfamiliar"] else "No",
+        "🚫 Fired" if r["unfamiliar"] else "✅ Pass",
         f"distance = {r['familiarity_distance']:.2f}",
         delta_color="off"
     )

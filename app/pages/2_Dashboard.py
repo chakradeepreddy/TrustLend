@@ -1,10 +1,16 @@
 import json
+import sys
 from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+sys.path[:0] = [str(ROOT), str(ROOT / "app")]
+from sidebar import queue_badge
+
+st.logo(str(ROOT / "app" / "logo.svg"))
+queue_badge()
 st.title("Does it work?")
 path = ROOT / "artifacts" / "results.json"
 

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="48" viewBox="0 0 220 48">
+  <g transform="translate(4,4)">
+    <path d="M20 0 L38 6 V20 C38 32 30 39 20 40 C10 39 2 32 2 20 V6 Z"
+          fill="#1E2A30" stroke="#FFBF00" stroke-width="2"/>
+    <path d="M11 20 L17 26 L29 13" fill="none" stroke="#FFBF00"
+          stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="52" y="30" font-family="sans-serif" font-size="22" font-weight="700"
+        fill="#FAFAFA">Trust<tspan fill="#FFBF00">Lend</tspan></text>
+</svg>

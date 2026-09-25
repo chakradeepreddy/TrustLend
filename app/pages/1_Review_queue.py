@@ -6,9 +6,12 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / "app")]
 from audit import log, LOG
+from sidebar import queue_badge
 
-st.title("Review queue")
+st.logo(str(ROOT / "app" / "logo.svg"))
+queue_badge()
 queue = st.session_state.get("queue", [])
+st.title(f"Review queue ({len(queue)})" if queue else "Review queue")
 
 if not queue:
     st.info("Nothing waiting. Send an applicant from the Home page first.")
@@ -33,3 +36,11 @@ for i, case in enumerate(list(queue)):
 st.subheader("Audit log")
 if Path(LOG).exists():
     st.dataframe(pd.read_csv(LOG).iloc[::-1], hide_index=True)
+    st.download_button(
+        "Download audit log (CSV)",
+        data=Path(LOG).read_bytes(),
+        file_name="trustlend_audit_log.csv",
+        mime="text/csv",
+    )
+else:
+    st.caption("No decisions logged yet.")
