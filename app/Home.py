@@ -7,6 +7,9 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT), str(ROOT / "app")]
 
+import importlib
+import src.decide
+importlib.reload(src.decide)
 from src.decide import decide
 from audit import log
 
@@ -81,5 +84,5 @@ if submitted:
         delta_color="off"
     )
 
-    st.write("**The 5 most similar past applicants:**")
-    st.dataframe(pd.DataFrame(r["neighbours"]), hide_index=True)
+    st.write("**The 10 most similar past applicants:**")
+    st.dataframe(pd.DataFrame(r["neighbours"]), hide_index=True, height=385)

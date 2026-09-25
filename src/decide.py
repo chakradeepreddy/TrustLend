@@ -24,7 +24,7 @@ def decide(applicant: dict) -> dict:
     if unfamiliar:
         reasons += fam.reasons(row.iloc[0])
 
-    near = fam.ref_rows.iloc[idx[0][:5]]                 # 5 most similar people
+    near = fam.ref_rows.iloc[idx[0][:10]]                 # 10 most similar people
     neighbours = [{"age": int(r["age"]),
                    "MonthlyIncome": None if pd.isna(r["MonthlyIncome"]) else float(r["MonthlyIncome"]),
                    "outcome": "did not repay" if r[TARGET] == 1 else "repaid"}
