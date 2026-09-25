@@ -76,6 +76,9 @@ def check1_unsure(p: float, band: float) -> bool:
 
 if __name__ == "__main__":
     # TEMPORARY DEVELOPMENT MODE
+    import plotly.graph_objects as go
+    from sklearn.calibration import calibration_curve
+
     # This block allows independent testing until src/data.py is implemented by Tanush.
     data_path = "data/cs-training.csv"
 
@@ -90,17 +93,46 @@ if __name__ == "__main__":
         # It does NOT represent the final test/stranger/corrupted sets.
         train, val = train_test_split(df, stratify=df[TARGET], random_state=42)
 
+        print("Training raw model...")
+        raw_model = HistGradientBoostingClassifier(random_state=0)
+        raw_model.fit(train[FEATURES], train[TARGET])
+        p_val_raw = raw_model.predict_proba(val[FEATURES])[:, 1]
+        raw_auc = roc_auc_score(val[TARGET], p_val_raw)
+
         print("Training and calibrating model...")
         model = train_model(train)
+        p_val_calibrated = risk(model, val)
+        calibrated_auc = roc_auc_score(val[TARGET], p_val_calibrated)
 
-        print("Calculating validation AUC...")
-        p_val = risk(model, val)
-        auc = roc_auc_score(val[TARGET], p_val)
+        print(f"\nRaw model validation AUC: {raw_auc:.4f}")
+        print(f"Calibrated model validation AUC: {calibrated_auc:.4f}")
 
-        print(f"\nSUCCESS! Model trained successfully.")
-        print(f"Validation AUC: {auc:.4f}")
+        print("\nCreating reliability diagram...")
+        prob_true_raw, prob_pred_raw = calibration_curve(
+            val[TARGET], p_val_raw, n_bins=10, strategy="uniform"
+        )
+        prob_true_cal, prob_pred_cal = calibration_curve(
+            val[TARGET], p_val_calibrated, n_bins=10, strategy="uniform"
+        )
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines", name="Perfectly calibrated", line=dict(dash="dot", color="black")))
+        fig.add_trace(go.Scatter(x=prob_pred_raw, y=prob_true_raw, mode="lines+markers", name="Raw model"))
+        fig.add_trace(go.Scatter(x=prob_pred_cal, y=prob_true_cal, mode="lines+markers", name="Calibrated model"))
+
+        fig.update_layout(
+            title="Reliability Diagram: Raw vs Calibrated Default Probabilities",
+            xaxis_title="Mean predicted probability",
+            yaxis_title="Fraction of positives",
+            width=800,
+            height=600
+        )
 
         os.makedirs("artifacts", exist_ok=True)
+        chart_path = "artifacts/reliability_diagram.png"
+        fig.write_image(chart_path)
+        print(f"Reliability diagram saved to {chart_path}")
+
         artifact_path = "artifacts/model.joblib"
         joblib.dump(model, artifact_path)
-        print(f"Trained model saved to {artifact_path}")
+        print(f"Trained calibrated model saved to {artifact_path}")

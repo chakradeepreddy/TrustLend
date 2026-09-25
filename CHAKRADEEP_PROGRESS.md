@@ -102,9 +102,9 @@ Completed tasks:
 - Implement Check 1 (uncertainty band)
 - Save the trained model artifact to artifacts/model.joblib
 - Implement risk(), plain_decision(), check1_unsure(), and CUTOFF
+- Produce the reliability diagram (Raw AUC: 0.8669, Calibrated AUC: 0.8677 on temporary split)
 
 Pending tasks:
-- Produce the reliability diagram
 - Create the model card
 - Test everything
 
@@ -130,5 +130,5 @@ Pending tasks:
 - Keep this log updated after each meaningful milestone.
 
 ## Current status
-Current step: Baseline model implementation complete.
-Next step: Review and validate the model implementation, then produce the reliability diagram and model card.
+Current step: Baseline model implementation and reliability diagram generation complete (using temporary train/validation split).
+Next step: Create the model card.
