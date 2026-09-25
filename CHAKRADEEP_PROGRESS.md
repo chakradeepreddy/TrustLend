@@ -103,9 +103,10 @@ Completed tasks:
 - Save the trained model artifact to artifacts/model.joblib
 - Implement risk(), plain_decision(), check1_unsure(), and CUTOFF
 - Produce the reliability diagram (Raw AUC: 0.8669, Calibrated AUC: 0.8677 on temporary split)
+- Draft the model card
 
 Pending tasks:
-- Create the model card
+- Finalize the model card with official evaluation metrics
 - Test everything
 
 ## My planned ML work
@@ -130,5 +131,41 @@ Pending tasks:
 - Keep this log updated after each meaningful milestone.
 
 ## Current status
-Current step: Baseline model implementation and reliability diagram generation complete (using temporary train/validation split).
-Next step: Create the model card.
+Current step: Model card drafted.
+Next step: Wait for the evaluation harness to finalize the metrics.
+
+## Model Card Draft (In Progress)
+*Note: This is a draft for the hackathon pitch slide. Final metrics are pending the completion of the team's data pipeline.*
+
+**1. Model**
+- Algorithm: `HistGradientBoostingClassifier`
+- Calibration: `CalibratedClassifierCV` (isotonic, cv=5)
+
+**2. Dataset**
+- Source: Give Me Some Credit (`cs-training.csv`)
+- Size & Target: 150,000 rows predicting `SeriousDlqin2yrs` (~6.7% defaults)
+- Quirks: `MonthlyIncome` and `NumberOfDependents` have missing values. `Unnamed: 0` is excluded.
+
+**3. Current Development Metrics**
+*(Temporary metrics based on a simple train/validation split)*
+- Raw validation AUC: 0.8669
+- Calibrated validation AUC: 0.8677
+
+**4. Decision Policy**
+- Costs: Missed default = 5, Wrong denial = 1
+- Cutoff: 1 / 6 ≈ 0.167 (assumed cost ratio, not a learned threshold)
+
+**5. Check 1 (Ambiguity Detection)**
+- Flags applications where calibrated risk is too close to the cutoff.
+- The final uncertainty band is pending Akshay's policy validation search.
+
+**6. Limitations**
+- Public, non-Indian dataset; demonstrates the method, not a specific bank's model.
+- Unfamiliarity reflects only the recorded features.
+- Cost assumptions are illustrative.
+- Final test results are not available yet.
+
+**7. Component Status**
+- Baseline model, calibration, and reliability diagram: Complete
+- Final validation/test evaluation: Pending Tanush's pipeline
+- Final Check 1 band/policy: Pending Akshay's validation search
