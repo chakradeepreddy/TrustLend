@@ -1,6 +1,5 @@
-# src/decide.py (FAKE version: same answer every time. Replaced in Step 4.)
+# src/decide.py (FAKE version: same answer every time. Unblocks Streamlit app.)
 def decide(applicant: dict) -> dict:
-    """applicant: one row, with the same column names as the CSV."""
     return {
         "decision": "REVIEW",
         "model_says": "APPROVE",
