@@ -11,7 +11,7 @@ from src.decide import decide
 from audit import log
 
 st.set_page_config(page_title="TrustLend", layout="wide")
-st.logo("app/logo.png")
+#st.logo("app/logo.png")
 st.title("TrustLend: a loan AI that knows when to ask a human")
 
 FIELDS = {
