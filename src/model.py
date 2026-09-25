@@ -14,6 +14,10 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
 
 # Cost constants for the bank
 COST_MISSED_DEFAULT = 5
@@ -39,6 +43,19 @@ FEATURES = [
     "NumberOfTime60-89DaysPastDueNotWorse",
     "NumberOfDependents"
 ]
+
+def train_logistic_baseline(train: pd.DataFrame) -> Any:
+    """
+    Train a simple logistic regression baseline with median imputation and scaling.
+    """
+    pipeline = Pipeline([
+        ('imputer', SimpleImputer(strategy='median')),
+        ('scaler', StandardScaler()),
+        ('classifier', LogisticRegression(random_state=0, max_iter=1000))
+    ])
+    pipeline.fit(train[FEATURES], train[TARGET])
+    return pipeline
+
 
 def train_model(train: pd.DataFrame) -> Any:
     """
@@ -93,6 +110,11 @@ if __name__ == "__main__":
         # It does NOT represent the final test/stranger/corrupted sets.
         train, val = train_test_split(df, stratify=df[TARGET], random_state=42)
 
+        print("Training logistic baseline...")
+        log_model = train_logistic_baseline(train)
+        p_val_log = log_model.predict_proba(val[FEATURES])[:, 1]
+        log_auc = roc_auc_score(val[TARGET], p_val_log)
+
         print("Training raw model...")
         raw_model = HistGradientBoostingClassifier(random_state=0)
         raw_model.fit(train[FEATURES], train[TARGET])
@@ -104,7 +126,8 @@ if __name__ == "__main__":
         p_val_calibrated = risk(model, val)
         calibrated_auc = roc_auc_score(val[TARGET], p_val_calibrated)
 
-        print(f"\nRaw model validation AUC: {raw_auc:.4f}")
+        print(f"\nLogistic baseline validation AUC: {log_auc:.4f}")
+        print(f"Raw model validation AUC: {raw_auc:.4f}")
         print(f"Calibrated model validation AUC: {calibrated_auc:.4f}")
 
         print("\nCreating reliability diagram...")
