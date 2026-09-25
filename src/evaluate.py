@@ -440,3 +440,178 @@ def deferral_rates(evaluated_df: pd.DataFrame) -> Dict[str, Any]:
         "by_age": by_age,
         "by_dependents": by_dependents,
     }
+
+
+def main():
+    import json
+    import os
+    from src.data import load, split, corrupt, FEATURES, TARGET
+    from src.decide import decide, model, fam, T
+    from src.model import CUTOFF
+
+    print("Loading dataset...")
+    df = load()
+
+    print("Splitting dataset (train/val/test/strangers)...")
+    train, val, test, strangers = split(df, seed=42)
+
+    print("Generating corrupted test set...")
+    corrupted = corrupt(test, seed=0)
+
+    print("Running evaluation across familiar, strangers, and corrupted splits...")
+    all_eval_rows = pd.concat([test, strangers, corrupted])
+    x_eval = all_eval_rows[FEATURES].astype(float)
+    p_all = model.predict_proba(x_eval)[:, 1]
+    d_all, _ = fam.distance(x_eval)
+    unsure_all = np.abs(p_all - CUTOFF) < T["band"]
+    unfam_all = d_all > T["fam_threshold"]
+    model_says_all = np.where(p_all >= CUTOFF, "DENY", "APPROVE")
+    decision_all = np.where(unsure_all | unfam_all, "REVIEW", model_says_all)
+
+    outputs = [
+        {
+            "decision": str(decision_all[i]),
+            "model_says": str(model_says_all[i]),
+            "p_default": float(p_all[i]),
+            "unsure": bool(unsure_all[i]),
+            "unfamiliar": bool(unfam_all[i]),
+            "familiarity_distance": float(d_all[i]),
+            "reasons": [],
+            "neighbours": [],
+        }
+        for i in range(len(all_eval_rows))
+    ]
+    it = iter(outputs)
+
+    def fast_decide(applicant):
+        try:
+            return next(it)
+        except StopIteration:
+            return decide(applicant)
+
+    # Run the three groups through the existing evaluate_test_sets()
+    results = evaluate_test_sets(test, strangers, corrupted, fast_decide)
+
+    # Build compact table
+    def _format_row(name, summary):
+        return {
+            "test set": name,
+            "applicants": int(summary["total_applicants"]),
+            "sent to human": int(summary["sent_to_humans_count"]),
+            "deferral rate": f"{summary['deferral_rate']:.1%}",
+            "plain model cost": round(float(summary["plain_model_average_cost"]), 3),
+            "TrustLend cost": round(float(summary["trustlend_average_cost"]), 3),
+            "very sure and wrong: plain AI": int(summary["confidently_wrong_plain_model"]),
+            "very sure and wrong: let through": int(summary["confidently_wrong_trustlend"]),
+            "confidently wrong: plain vs TrustLend": f"{int(summary['confidently_wrong_plain_model'])} vs {int(summary['confidently_wrong_trustlend'])}",
+        }
+
+    table = [
+        _format_row("Normal applicants", results["familiar"]["summary"]),
+        _format_row("Strangers", results["strangers"]["summary"]),
+        _format_row("Typos", results["corrupted"]["summary"]),
+    ]
+
+    # Compute risk-coverage curve data using existing risk_coverage_curve
+    fam_eval = results["familiar"]["evaluated"]
+    _ = risk_coverage_curve(fam_eval, cutoff=CUTOFF)
+
+    # Compute budget curve for dashboard
+    both = pd.concat([test, strangers])
+    x_both = both[FEATURES].astype(float)
+    p_both = model.predict_proba(x_both)[:, 1]
+    d_both, _ = fam.distance(x_both)
+    y_both = both[TARGET].values
+    m_both = np.where(p_both >= CUTOFF, "DENY", "APPROVE")
+
+    def _avg_cost(y_sub, m_sub):
+        if len(y_sub) == 0:
+            return 0.0
+        c = np.zeros(len(y_sub), dtype=float)
+        c[(y_sub == 1) & (m_sub == "APPROVE")] = 5.0
+        c[(y_sub == 0) & (m_sub == "DENY")] = 1.0
+        return float(c.mean())
+
+    conf_both = np.abs(p_both - CUTOFF)
+    unfam_both = d_both > T["fam_threshold"]
+    tl_defer_order = np.lexsort((conf_both, ~unfam_both.astype(int)))
+    rng = np.random.default_rng(0)
+
+    curve = []
+    for b in [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30]:
+        k = int(b * len(both))
+        rand_defer = np.zeros(len(both), bool)
+        if k > 0:
+            rand_defer[rng.choice(len(both), k, replace=False)] = True
+        c1_defer = np.zeros(len(both), bool)
+        if k > 0:
+            c1_defer[np.argsort(conf_both)[:k]] = True
+        tl_defer = np.zeros(len(both), bool)
+        if k > 0:
+            tl_defer[tl_defer_order[:k]] = True
+
+        curve.append({
+            "budget": b,
+            "random": round(_avg_cost(y_both[~rand_defer], m_both[~rand_defer]), 3),
+            "check1_only": round(_avg_cost(y_both[~c1_defer], m_both[~c1_defer]), 3),
+            "trustlend": round(_avg_cost(y_both[~tl_defer], m_both[~tl_defer]), 3),
+        })
+
+    # Age-group reporting
+    age_binned = pd.cut(
+        fam_eval["age"],
+        bins=[0, 30, 45, 60, 150],
+        labels=["under 30", "30–45", "45–60", "over 60"],
+        right=False,
+    )
+    is_review_fam = fam_eval["decision"] == "REVIEW"
+    age_deferral_rates = {}
+    for g in ["under 30", "30–45", "45–60", "over 60"]:
+        mask = age_binned == g
+        age_deferral_rates[g] = round(float(is_review_fam[mask].mean()), 3) if mask.sum() > 0 else 0.0
+
+    # Ensure artifacts directory exists
+    os.makedirs("artifacts", exist_ok=True)
+
+    # Sanitize and write results.json
+    def _clean(val):
+        if isinstance(val, dict):
+            return {k: _clean(v) for k, v in val.items()}
+        if isinstance(val, list):
+            return [_clean(v) for v in val]
+        if isinstance(val, (np.floating, float)):
+            return None if (np.isnan(val) or np.isinf(val)) else float(val)
+        if isinstance(val, (np.integer, int)):
+            return int(val)
+        if isinstance(val, (np.bool_, bool)):
+            return bool(val)
+        return val
+
+    results_data = {
+        "table": table,
+        "curve": curve,
+        "fairness": {
+            "by_age": age_deferral_rates,
+        },
+        "thresholds": {
+            "band": float(T.get("band", 0.08)),
+            "fam_threshold": float(T.get("fam_threshold", 2.228)),
+        },
+    }
+
+    with open("artifacts/results.json", "w", encoding="utf-8") as f:
+        json.dump(_clean(results_data), f, indent=2)
+
+    print("\n=== TRUSTLEND EVALUATION RESULTS ===")
+    print(pd.DataFrame(table).to_string(index=False))
+
+    print("\n=== AGE-GROUP DEFERRAL RATES (FAIRNESS MEASUREMENT) ===")
+    for grp, rate in age_deferral_rates.items():
+        print(f"  {grp:10s}: {rate:.1%}")
+
+    print("\nWrote evaluation output to artifacts/results.json")
+
+
+if __name__ == "__main__":
+    main()
+
