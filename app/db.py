@@ -100,8 +100,8 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     note        TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_time
-    ON audit_logs (time DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_id
+    ON audit_logs (id DESC);
 """
 
 
@@ -298,7 +298,7 @@ def get_audit_history(limit: int = 500) -> list:
         SELECT time, applicant, ai_said, risk, trustlend, final,
                decided_by, reasons, note
         FROM audit_logs
-        ORDER BY time DESC
+        ORDER BY id DESC
         LIMIT %s;
     """
     try:
