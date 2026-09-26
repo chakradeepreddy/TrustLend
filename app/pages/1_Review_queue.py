@@ -92,7 +92,7 @@ for case in queue:
     r         = _row_to_result(case)
     applicant = _row_to_applicant(case)
     file_no   = case.get("file_no", "TL-????")
-    time_str  = case["created_at"].strftime("%H:%M") if case.get("created_at") else ""
+    time_str  = pd.to_datetime(case["created_at"]).strftime("%H:%M") if case.get("created_at") else ""
     case_id   = case["id"]
 
     st.markdown(
