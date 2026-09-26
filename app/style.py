@@ -34,8 +34,8 @@ def inject_css():
             background-size: 24px 24px;
         }}
         [data-testid="stHeader"] {{ background: transparent; }}
-        [data-testid="stToolbar"], [data-testid="stAppDeployButton"],
-        [data-testid="stMainMenu"], [data-testid="stDecoration"] {{ display: none !important; }}
+        [data-testid="stAppDeployButton"], [data-testid="stMainMenu"],
+        [data-testid="stStatusWidget"], [data-testid="stDecoration"] {{ display: none !important; }}
         [data-testid="stMainBlockContainer"] {{ padding-top: 2.5rem; }}
 
         div[class*="st-key-card_"] {{
