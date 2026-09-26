@@ -18,8 +18,10 @@ def log(applicant, result, final, decided_by, note=""):
     try:
         from db import create_audit_entry
         create_audit_entry(applicant, result, final, decided_by, note)
-    except Exception:
-        pass  # degraded mode — fall through to CSV
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        # degraded mode — fall through to CSV
 
     # ── 2. CSV backup (local only) ─────────────────────────────────────
     try:
