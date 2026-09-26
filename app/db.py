@@ -194,7 +194,7 @@ def get_pending_reviews() -> list:
                times_30_59_late, times_60_89_late, times_90_late,
                model_says, p_default, trustlend_decision,
                unsure, unfamiliar, familiarity_distance, reasons,
-               created_at
+               to_char(created_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS') AS created_at
         FROM review_cases
         WHERE status = 'pending'
         ORDER BY created_at ASC;
@@ -295,7 +295,8 @@ def get_audit_history(limit: int = 500) -> list:
     if conn is None:
         return []
     sql = """
-        SELECT time, applicant, ai_said, risk, trustlend, final,
+        SELECT to_char(time AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD HH24:MI:SS') AS time, 
+               applicant, ai_said, risk, trustlend, final,
                decided_by, reasons, note
         FROM audit_logs
         ORDER BY id DESC
