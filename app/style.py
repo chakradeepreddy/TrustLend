@@ -56,6 +56,14 @@ def inject_css():
             color: {SHEET};
         }}
         section[data-testid="stSidebar"] * {{ color: {SHEET} !important; }}
+        
+        [data-testid="stLogo"] {{
+            height: 40px !important;
+        }}
+        [data-testid="stLogo"] img {{
+            max-height: 100% !important;
+            height: 40px !important;
+        }}
         section[data-testid="stSidebar"] [data-testid="stPageLink-NavLink"],
         section[data-testid="stSidebar"] a[data-testid="stPageLink-NavLink"] {{
             border-radius: 0 !important;
