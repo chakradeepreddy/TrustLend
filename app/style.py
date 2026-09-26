@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import streamlit as st
 
 PAPER = "#ECE8DF"
@@ -32,6 +34,22 @@ def inject_css():
             background-size: 24px 24px;
         }}
         [data-testid="stHeader"] {{ background: transparent; }}
+        [data-testid="stToolbar"], [data-testid="stAppDeployButton"],
+        [data-testid="stMainMenu"], [data-testid="stDecoration"] {{ display: none !important; }}
+        [data-testid="stMainBlockContainer"] {{ padding-top: 2.5rem; }}
+
+        div[class*="st-key-card_"] {{
+            border: 1.5px solid {INK} !important;
+            border-radius: 0 !important;
+            background: {SHEET} !important;
+            margin-bottom: 20px;
+        }}
+        .tl-card-head {{
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px;
+            padding: 12px 18px; margin: -1rem -1rem 1rem; border-bottom: 1.5px solid {INK};
+        }}
+        .tl-card-head h2 {{ margin: 0; flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }}
+        .tl-card-head span {{ font-family: 'JetBrains Mono', monospace; font-size: 11px; color: {MUTED}; white-space: nowrap; }}
 
         section[data-testid="stSidebar"] {{
             background: {INK};
@@ -152,6 +170,21 @@ def sheet_header(kicker, title, subtitle, meta):
         f'{cols_html}</div>',
         unsafe_allow_html=True,
     )
+
+
+@contextmanager
+def card(key, title, meta=""):
+    """A bordered card that real widgets can live inside (unlike sheet_start/sheet_end,
+    which draw an empty HTML box that widgets render outside of). Use as:
+        with card("demo", "A · Demo applicants"):
+            st.button(...)
+    """
+    with st.container(border=True, key=f"card_{key}"):
+        st.markdown(
+            f'<div class="tl-card-head"><h2>{title}</h2><span>{meta}</span></div>',
+            unsafe_allow_html=True,
+        )
+        yield
 
 
 def sheet_start(title, meta=""):
