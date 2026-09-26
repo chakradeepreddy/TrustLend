@@ -14,6 +14,8 @@ importlib.reload(src.decide)
 from src.decide import decide
 from src.model import CUTOFF
 from audit import log
+import db as _db
+_db.init_db()
 from sidebar import render_sidebar
 from style import inject_css, sheet_header, sheet_start, sheet_end, stamp, tag, check_ruler, MUTED2
 
@@ -45,7 +47,7 @@ PRESETS = json.load(open(ROOT / "app" / "presets.json"))
 
 for col, (_, default) in FIELDS.items():
     st.session_state.setdefault(col, float(default))
-st.session_state.setdefault("queue", [])
+# session_state queue kept for sidebar badge compat; DB is source of truth
 st.session_state.setdefault("file_seq", 138)
 
 def load_preset(name):
@@ -65,7 +67,7 @@ cols = st.columns(len(PRESETS))
 for c, name in zip(cols, PRESETS):
     with c:
         with st.container(key=f"preset_active_{name}" if name == active else f"preset_{name}"):
-            st.button(name.upper(), key=f"btn_{name}", on_click=load_preset, args=(name,), width="stretch")
+            st.button(name.upper(), key=f"btn_{name}", on_click=load_preset, args=(name,), use_container_width=True)
         st.caption(CAPTIONS.get(name, ""))
 sheet_end()
 
@@ -92,10 +94,7 @@ with right:
             file_no = f"TL-{st.session_state.file_seq:04d}"
             st.session_state["last_result"] = {"name": name, "applicant": applicant, "result": r, "file": file_no}
             if r["decision"] == "REVIEW":
-                st.session_state.queue.append({
-                    "name": name, "applicant": applicant, "result": r, "file": file_no,
-                    "time": datetime.now().strftime("%H:%M"),
-                })
+                _db.create_review_case(file_no, name, applicant, r)
             else:
                 log(name, r, r["decision"], "AI")
 

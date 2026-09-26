@@ -1,4 +1,8 @@
 import streamlit as st
+import sys
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent.parent
+sys.path[:0] = [str(ROOT), str(ROOT / "app")]
 
 from src.model import CUTOFF
 
@@ -10,7 +14,11 @@ def render_sidebar(T):
         unsafe_allow_html=True,
     )
 
-    n = len(st.session_state.get("queue", []))
+    try:
+        from db import count_pending_reviews
+        n = count_pending_reviews()
+    except Exception:
+        n = 0
     badge = f'<span style="padding:2px 7px; background:#E8691C; color:#16181B; font-family:\'JetBrains Mono\',monospace; font-size:11px; font-weight:700">{n}</span>' if n else ""
     st.sidebar.markdown(
         f'<div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; '
