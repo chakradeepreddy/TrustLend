@@ -1,0 +1,93 @@
+{
+  "table": [
+    {
+      "test set": "Normal applicants",
+      "applicants": 28797,
+      "sent to human": 3881,
+      "deferral rate": "13.5%",
+      "plain model cost": 0.209,
+      "TrustLend cost": 0.126,
+      "very sure and wrong: plain AI": 0,
+      "very sure and wrong: let through": 0,
+      "confidently wrong: plain vs TrustLend": "0 vs 0"
+    },
+    {
+      "test set": "Strangers",
+      "applicants": 6014,
+      "sent to human": 1219,
+      "deferral rate": "20.3%",
+      "plain model cost": 0.193,
+      "TrustLend cost": 0.093,
+      "very sure and wrong: plain AI": 0,
+      "very sure and wrong: let through": 0,
+      "confidently wrong: plain vs TrustLend": "0 vs 0"
+    },
+    {
+      "test set": "Typos",
+      "applicants": 28797,
+      "sent to human": 19623,
+      "deferral rate": "68.1%",
+      "plain model cost": 0.222,
+      "TrustLend cost": 0.044,
+      "very sure and wrong: plain AI": 0,
+      "very sure and wrong: let through": 0,
+      "confidently wrong: plain vs TrustLend": "0 vs 0"
+    }
+  ],
+  "curve": [
+    {
+      "budget": 0.0,
+      "random": 0.206,
+      "check1_only": 0.206,
+      "trustlend": 0.206
+    },
+    {
+      "budget": 0.05,
+      "random": 0.205,
+      "check1_only": 0.178,
+      "trustlend": 0.186
+    },
+    {
+      "budget": 0.1,
+      "random": 0.203,
+      "check1_only": 0.153,
+      "trustlend": 0.159
+    },
+    {
+      "budget": 0.15,
+      "random": 0.208,
+      "check1_only": 0.136,
+      "trustlend": 0.14
+    },
+    {
+      "budget": 0.2,
+      "random": 0.208,
+      "check1_only": 0.124,
+      "trustlend": 0.123
+    },
+    {
+      "budget": 0.25,
+      "random": 0.202,
+      "check1_only": 0.112,
+      "trustlend": 0.112
+    },
+    {
+      "budget": 0.3,
+      "random": 0.204,
+      "check1_only": 0.106,
+      "trustlend": 0.104
+    }
+  ],
+  "fairness": {
+    "by_age": {
+      "under 30": 0.28,
+      "30\u201345": 0.201,
+      "45\u201360": 0.138,
+      "over 60": 0.05
+    }
+  },
+  "thresholds": {
+    "band": 0.08,
+    "fam_threshold": 2.2284829372817296
+  }
+}
