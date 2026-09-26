@@ -26,12 +26,10 @@ FIELD_LABELS = {
     "NumberOfTime60-89DaysPastDueNotWorse": "60-89 days late", "NumberOfTimes90DaysLate": "90+ days late",
 }
 
-# ── load queue from DB ──────────────────────────────────────────────────────
-@st.cache_data(ttl=5)
+# ── load queue from DB (fresh on every render — no caching) ────────────────
 def _load_queue():
     return _db.get_pending_reviews()
 
-@st.cache_data(ttl=5)
 def _load_audit():
     return _db.get_audit_history(limit=500)
 
@@ -156,16 +154,12 @@ for case in queue:
                 if st.button("Stamp approved", key=f"approve_btn_{case_id}", use_container_width=True):
                     _db.complete_review(case_id, "APPROVE", note)
                     log(case["applicant_name"], r, "APPROVE", "human reviewer", note)
-                    _load_queue.clear()
-                    _load_audit.clear()
                     st.rerun()
         with b:
             with st.container(key=f"deny_{case_id}"):
                 if st.button("Stamp denied", key=f"deny_btn_{case_id}", use_container_width=True):
                     _db.complete_review(case_id, "DENY", note)
                     log(case["applicant_name"], r, "DENY", "human reviewer", note)
-                    _load_queue.clear()
-                    _load_audit.clear()
                     st.rerun()
     st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 
